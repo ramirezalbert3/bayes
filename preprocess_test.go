@@ -26,8 +26,9 @@ func TestKeepsUnderscoresAndDashes(t *testing.T) {
 
 func TestCountVectorizerBasic(t *testing.T) {
 	texts := []string{"apple banana, bycicle", "bycicle bycicle, blue manycolors and apple"}
-	vocabulary := CountVectorizer(texts)
-	expected := map[string]int{
+	c := CountVectorizer{}
+	word_counts, parametrized_texts := c.FitTransform(texts)
+	expected_word_counts := map[string]int{
 		"apple":      2,
 		"banana":     1,
 		"bycicle":    3,
@@ -35,12 +36,30 @@ func TestCountVectorizerBasic(t *testing.T) {
 		"manycolors": 1,
 		"and":        1,
 	}
-	for word, count := range vocabulary {
-		if count != expected[word] {
-			t.Error("Expected count", count, "got", expected[word], "for", word)
+	if len(word_counts) != len(expected_word_counts) {
+		t.Error("Expected word_counts len", len(expected_word_counts), "got", len(word_counts))
+	}
+	for word, count := range word_counts {
+		if count != expected_word_counts[word] {
+			t.Error("Expected count", count, "got", expected_word_counts[word], "for", word)
 		}
 	}
-	if len(vocabulary) != len(expected) {
-		t.Error("Expected vocabulary len", len(expected), "got", len(vocabulary))
+
+	expected_parametrized_texts := [][]int{
+		{1, 1, 1, 0, 0, 0},
+		{1, 0, 2, 1, 1, 1},
+	}
+	if len(parametrized_texts) != len(expected_parametrized_texts) {
+		t.Error("Expected parametrized_texts len", len(expected_parametrized_texts), "got", len(parametrized_texts))
+	}
+	for i, param_text := range parametrized_texts {
+		if len(param_text) != len(expected_parametrized_texts[i]) {
+			t.Error("Expected text:", i, "len", len(expected_parametrized_texts[i]), "got", len(param_text))
+		}
+		for j, count := range param_text {
+			if count != expected_parametrized_texts[i][j] {
+				t.Error("Expected count", expected_parametrized_texts[i][j], "got", count, "for", i, j)
+			}
+		}
 	}
 }
