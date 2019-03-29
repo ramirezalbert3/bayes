@@ -24,21 +24,23 @@ func TestKeepsUnderscoresAndDashes(t *testing.T) {
 	}
 }
 
-
 func TestCountVectorizerBasic(t *testing.T) {
 	texts := []string{"apple banana, bycicle", "bycicle bycicle, blue manycolors and apple"}
 	vocabulary := CountVectorizer(texts)
 	expected := map[string]int{
-		"apple": 2,
-		"banana": 1,
-		"bycicle": 3,
-		"blue": 1,
+		"apple":      2,
+		"banana":     1,
+		"bycicle":    3,
+		"blue":       1,
 		"manycolors": 1,
-		"and": 1,
+		"and":        1,
 	}
 	for word, count := range vocabulary {
 		if count != expected[word] {
 			t.Error("Expected count", count, "got", expected[word], "for", word)
 		}
+	}
+	if len(vocabulary) != len(expected) {
+		t.Error("Expected vocabulary len", len(expected), "got", len(vocabulary))
 	}
 }

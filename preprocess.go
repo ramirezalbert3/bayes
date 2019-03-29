@@ -3,7 +3,7 @@ package preprocess
 import (
 	"regexp"
 	"strings"
-	)
+)
 
 var re_punctuation = regexp.MustCompile("[^a-zA-Z0-9-_ ]+")
 
