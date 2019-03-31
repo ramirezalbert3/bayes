@@ -16,6 +16,7 @@ func Tokenize(s string) []string {
 }
 
 // TODO: all this is very very naive (and unoptimized)
+// TODO: use gonum?
 type CountVectorizer struct {
 	Vocabulary []string
 	WordCounts map[string]int
@@ -63,7 +64,7 @@ func TfidfTransform(x [][]float64, use_idf bool) [][]float64 {
 		for col, c := range t {
 			res[row][col] = float64(c) / float64(total_count)
 			if c > 0 {
-				document_frequency[col] += 1
+				document_frequency[col] += c
 			}
 		}
 	}

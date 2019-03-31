@@ -1,61 +1,37 @@
 package preprocess
 
 import (
+	"math"
+	"reflect"
 	"testing"
 )
+
+func check_equal(expected, actual interface{}, t *testing.T) {
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("Expected:\n", expected, "\nGot:\n", actual)
+	}
+}
 
 func TestBasic(t *testing.T) {
 	test_string := "Hello, my name is Albert, it's 10 times a pleasure to meet you"
 	tokens := Tokenize(test_string)
 	expected := []string{"hello", "my", "name", "is", "albert", "its", "10", "times", "a", "pleasure", "to", "meet", "you"}
-	for idx, token := range tokens {
-		if token != expected[idx] {
-			t.Error("Expected", expected[idx], "got", token)
-		}
-	}
+	check_equal(expected, tokens, t)
 }
 
-func TestKeepsUnderscoresAndDashes(t *testing.T) {
-	test_string := "This... sho.uld-be fai//Rly_siMple"
-	tokens := Tokenize(test_string)
-	expected := []string{"this", "should-be", "fairly_simple"}
-	for idx, token := range tokens {
-		if token != expected[idx] {
-			t.Error("Expected", expected[idx], "got", token)
-		}
-	}
-}
-
-func check_parametrized_texts_equal(actual [][]float64, expected [][]float64, t *testing.T) {
-	if len(actual) != len(expected) {
-		t.Error("Expected parametrized_texts len", len(expected), "got", len(actual))
-	}
-	for i, param_text := range actual {
-		if len(param_text) != len(expected[i]) {
-			t.Error("Expected text:", i, "len", len(expected[i]), "got", len(param_text))
-		}
-		for j, count := range param_text {
-			if count != expected[i][j] {
-				t.Error("Expected count", expected[i][j], "got", count, "at text:", i, "token:", j)
-			}
-		}
-	}
+func tfidf(w_in_doc, w_in_docs, doc_len, n_docs int) float64 {
+	tf := float64(w_in_doc) / float64(doc_len)
+	idf := math.Log(float64(n_docs+1)/float64(w_in_docs+1)) + 1
+	return tf * idf
 }
 
 func TestCountVectorizerBasic(t *testing.T) {
 	texts := []string{"apple banana, bycicle", "bycicle bycicle, blue manycolors and apple"}
 	c := CountVectorizer{}
-	parametrized_texts := c.FitTransform(texts)
+	counts_texts := c.FitTransform(texts)
 
 	expected_vocabulary := []string{"apple", "banana", "bycicle", "blue", "manycolors", "and"}
-	if len(c.Vocabulary) != len(expected_vocabulary) {
-		t.Error("Expected c.Vocabulary len", len(expected_vocabulary), "got", len(c.Vocabulary))
-	}
-	for idx, word := range c.Vocabulary {
-		if expected_vocabulary[idx] != word {
-			t.Error("Expected", expected_vocabulary[idx], "got", word)
-		}
-	}
+	check_equal(expected_vocabulary, c.Vocabulary, t)
 
 	expected_word_counts := map[string]int{
 		"apple":      2,
@@ -65,28 +41,32 @@ func TestCountVectorizerBasic(t *testing.T) {
 		"manycolors": 1,
 		"and":        1,
 	}
-	if len(c.WordCounts) != len(expected_word_counts) {
-		t.Error("Expected c.WordCounts len", len(expected_word_counts), "got", len(c.WordCounts))
-	}
-	for word, count := range c.WordCounts {
-		if count != expected_word_counts[word] {
-			t.Error("Expected count", count, "got", expected_word_counts[word], "for", word)
-		}
-	}
+	check_equal(expected_word_counts, c.WordCounts, t)
 
-	expected_parametrized_texts := [][]float64{
+	expected_counts_texts := [][]float64{
 		{1, 1, 1, 0, 0, 0},
 		{1, 0, 2, 1, 1, 1},
 	}
-	check_parametrized_texts_equal(parametrized_texts, expected_parametrized_texts, t)
+	check_equal(expected_counts_texts, counts_texts, t)
 
-	frequency_texts := TfidfTransform(parametrized_texts, false)
+	tf_texts := TfidfTransform(counts_texts, false)
 
-	expected_frequency_texts := [][]float64{
+	expected_tf_texts := [][]float64{
 		{1 / 3.0, 1 / 3.0, 1 / 3.0, 0, 0, 0},
 		{1 / 6.0, 0, 2 / 6.0, 1 / 6.0, 1 / 6.0, 1 / 6.0},
 	}
-	check_parametrized_texts_equal(frequency_texts, expected_frequency_texts, t)
+	check_equal(expected_tf_texts, tf_texts, t)
 
-	// TODO: test Tfidf Tfidf
+	tfidf_texts := TfidfTransform(counts_texts, true)
+	expected_tfidf_texts := [][]float64{
+		{tfidf(1, 2, 3, 2), tfidf(1, 1, 3, 2), tfidf(1, 3, 3, 2), 0, 0, 0},
+		{tfidf(1, 2, 6, 2), 0, tfidf(2, 3, 6, 2), tfidf(1, 1, 6, 2), tfidf(1, 1, 6, 2), tfidf(1, 1, 6, 2)},
+	}
+	check_equal(expected_tfidf_texts, tfidf_texts, t)
+
+	// Vars have not been unexpectedly modified
+	check_equal([]string{"apple banana, bycicle", "bycicle bycicle, blue manycolors and apple"}, texts, t)
+	check_equal(expected_vocabulary, c.Vocabulary, t)
+	check_equal(expected_word_counts, c.WordCounts, t)
+	check_equal(expected_counts_texts, counts_texts, t)
 }
