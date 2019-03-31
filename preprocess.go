@@ -21,7 +21,7 @@ type CountVectorizer struct {
 	WordCounts map[string]int
 }
 
-func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int) {
+func (c *CountVectorizer) FitTransform(texts []string) [][]float64 {
 	c.WordCounts = make(map[string]int)
 	tokenized_texts := make([][]string, len(texts))
 	for idx, text := range texts {
@@ -35,10 +35,10 @@ func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int)
 		}
 	}
 
-	parametrized_texts := make([][]int, len(texts))
+	parametrized_texts := make([][]float64, len(texts))
 
 	for row, tokens := range tokenized_texts {
-		parametrized_texts[row] = make([]int, len(c.Vocabulary))
+		parametrized_texts[row] = make([]float64, len(c.Vocabulary))
 		for _, t := range tokens {
 			for col, w := range c.Vocabulary {
 				if w == t {
@@ -47,18 +47,16 @@ func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int)
 			}
 		}
 	}
-	return c.WordCounts, parametrized_texts
+	return parametrized_texts
 }
 
-// TODO: this is Tf for now only
-// TODO: is there anything like const ref args?
-func TfidfTransform(x *[][]int) [][]float64 {
-	n_docs := len(*x)
+func TfidfTransform(x [][]float64, use_idf bool) [][]float64 {
+	n_docs := len(x)
 	res := make([][]float64, n_docs)
-	document_frequency := make([]int, len((*x)[0]))
-	for row, t := range *x {
+	document_frequency := make([]float64, len((x)[0]))
+	for row, t := range x {
 		res[row] = make([]float64, len(t))
-		total_count := 0
+		total_count := 0.0
 		for _, c := range t {
 			total_count += c
 		}
@@ -69,9 +67,12 @@ func TfidfTransform(x *[][]int) [][]float64 {
 			}
 		}
 	}
+	if !use_idf {
+		return res
+	}
 	for row, t := range res {
 		for col, _ := range t {
-			idf := math.Log(float64(n_docs)/float64(document_frequency[col])) + 1
+			idf := math.Log(float64(n_docs+1)/(document_frequency[col]+1)) + 1
 			res[row][col] = res[row][col] * idf
 		}
 	}
