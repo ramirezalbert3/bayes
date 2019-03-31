@@ -22,10 +22,10 @@ type CountVectorizer struct {
 
 func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int) {
 	c.WordCounts = make(map[string]int)
-	tokens := make([][]string, len(texts))
+	tokenized_texts := make([][]string, len(texts))
 	for idx, text := range texts {
-		tokens[idx] = Tokenize(text)
-		for _, t := range tokens[idx] {
+		tokenized_texts[idx] = Tokenize(text)
+		for _, t := range tokenized_texts[idx] {
 			if _, ok := c.WordCounts[t]; !ok {
 				c.WordCounts[t] = 0
 				c.Vocabulary = append(c.Vocabulary, t)
@@ -34,17 +34,17 @@ func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int)
 		}
 	}
 
-	counts := make([][]int, len(texts))
+	parametrized_texts := make([][]int, len(texts))
 
-	for t_idx, text_tokens := range tokens {
-		counts[t_idx] = make([]int, len(c.Vocabulary))
-		for _, t := range text_tokens {
-			for w_idx, w := range c.Vocabulary {
+	for row, tokens := range tokenized_texts {
+		parametrized_texts[row] = make([]int, len(c.Vocabulary))
+		for _, t := range tokens {
+			for col, w := range c.Vocabulary {
 				if w == t {
-					counts[t_idx][w_idx] += 1
+					parametrized_texts[row][col] += 1
 				}
 			}
 		}
 	}
-	return c.WordCounts, counts
+	return c.WordCounts, parametrized_texts
 }
