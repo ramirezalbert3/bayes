@@ -14,7 +14,7 @@ func Tokenize(s string) []string {
 	return tokens
 }
 
-// TODO: all this is very very naive
+// TODO: all this is very very naive (and unoptimized)
 type CountVectorizer struct {
 	Vocabulary []string
 	WordCounts map[string]int
@@ -47,4 +47,20 @@ func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int)
 		}
 	}
 	return c.WordCounts, parametrized_texts
+}
+
+// TODO: this is Tf for now only
+func TfIdfTransform(x [][]int) [][]float64 {
+	res := make([][]float64, len(x))
+	for row, t := range x {
+		res[row] = make([]float64, len(t))
+		total_count := 0
+		for _, c := range t {
+			total_count += c
+		}
+		for col, c := range t {
+			res[row][col] = float64(c) / float64(total_count)
+		}
+	}
+	return res
 }
