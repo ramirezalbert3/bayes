@@ -26,7 +26,7 @@ func TestKeepsUnderscoresAndDashes(t *testing.T) {
 	}
 }
 
-func check_parametrized_texts_equal(actual *[][]int, expected *[][]int, t *testing.T){
+func check_parametrized_texts_equal(actual *[][]int, expected *[][]int, t *testing.T) {
 	if len(*actual) != len(*expected) {
 		t.Error("Expected parametrized_texts len", len(*expected), "got", len(*actual))
 	}
@@ -43,7 +43,7 @@ func check_parametrized_texts_equal(actual *[][]int, expected *[][]int, t *testi
 }
 
 // TODO: what's the trait for this? we need generics
-func check_frequency_texts_equal(actual *[][]float64, expected *[][]float64, t *testing.T){
+func check_frequency_texts_equal(actual *[][]float64, expected *[][]float64, t *testing.T) {
 	if len(*actual) != len(*expected) {
 		t.Error("Expected parametrized_texts len", len(*expected), "got", len(*actual))
 	}
@@ -85,11 +85,13 @@ func TestCountVectorizerBasic(t *testing.T) {
 		{1, 0, 2, 1, 1, 1},
 	}
 	check_parametrized_texts_equal(&parametrized_texts, &expected_parametrized_texts, t)
-	
-	frequency_texts := TfIdfTransform(parametrized_texts)
+
+	frequency_texts := TfidfTransform(&parametrized_texts)
+
+	// TODO: this is Tf, not Tfidf
 	expected_frequency_texts := [][]float64{
-		{1/3.0, 1/3.0, 1/3.0, 0, 0, 0},
-		{1/6.0, 0, 2/6.0, 1/6.0, 1/6.0, 1/6.0},
+		{1 / 3.0, 1 / 3.0, 1 / 3.0, 0, 0, 0},
+		{1 / 6.0, 0, 2 / 6.0, 1 / 6.0, 1 / 6.0, 1 / 6.0},
 	}
 	check_frequency_texts_equal(&frequency_texts, &expected_frequency_texts, t)
 }

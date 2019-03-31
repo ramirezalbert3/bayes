@@ -1,6 +1,7 @@
 package preprocess
 
 import (
+	"math"
 	"regexp"
 	"strings"
 )
@@ -50,9 +51,12 @@ func (c *CountVectorizer) FitTransform(texts []string) (map[string]int, [][]int)
 }
 
 // TODO: this is Tf for now only
-func TfIdfTransform(x [][]int) [][]float64 {
-	res := make([][]float64, len(x))
-	for row, t := range x {
+// TODO: is there anything like const ref args?
+func TfidfTransform(x *[][]int) [][]float64 {
+	n_docs := len(*x)
+	res := make([][]float64, n_docs)
+	document_frequency := make([]int, len((*x)[0]))
+	for row, t := range *x {
 		res[row] = make([]float64, len(t))
 		total_count := 0
 		for _, c := range t {
@@ -60,6 +64,15 @@ func TfIdfTransform(x [][]int) [][]float64 {
 		}
 		for col, c := range t {
 			res[row][col] = float64(c) / float64(total_count)
+			if c > 0 {
+				document_frequency[col] += 1
+			}
+		}
+	}
+	for row, t := range res {
+		for col, _ := range t {
+			idf := math.Log(float64(n_docs)/float64(document_frequency[col])) + 1
+			res[row][col] = res[row][col] * idf
 		}
 	}
 	return res
